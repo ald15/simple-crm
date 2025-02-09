@@ -4,16 +4,19 @@ FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y \
     openssh-server \
     git \
+    passwd \
     && rm -rf /var/lib/apt/lists/*
 
-# Создание пользователя для SSH
-RUN useradd -m -s /bin/bash dockeruser \
-    && echo 'user:password' | chpasswd \
-    && mkdir /var/run/sshd
+# Создание пользователя и установка пароля
+RUN useradd -m -s /bin/bash user && \
+    echo "user:password" | chpasswd
 
-# Настройка SSH для работы внутри контейнера
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
-    && echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
+# Убедимся, что /var/run/sshd существует
+RUN mkdir -p /var/run/sshd
+
+# Разрешаем вход по SSH
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
 
 # Открытие порта SSH
 EXPOSE 22
